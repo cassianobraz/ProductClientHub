@@ -1,35 +1,27 @@
-﻿using ProductClientHub.API.Entities;
-using ProductClientHub.API.Infrastructure;
+﻿using ProductClientHub.API.Infrastructure;
 using ProductClientHub.API.UseCases.Clients.SharedValidator;
 using ProductClientHub.Communication.Requests;
-using ProductClientHub.Communication.Responses;
 using ProductClientHub.Exceptions.ExceptionsBase;
 
-namespace ProductClientHub.API.UseCases.Clients.Register;
+namespace ProductClientHub.API.UseCases.Clients.Update;
 
-public class RegisterClientUseCase
+public class UpdateClientUseCase
 {
-    public ResponseShortClientJson Execute(RequestClientJson request)
+    public void Execute(Guid clientId, RequestClientJson request)
     {
         Validate(request);
 
         var dbContext = new ProductClientHubDBContext();
 
-        var entity = new Client
-        {
-            Name = request.Name,
-            Email = request.Email
-        };
+        var entity = dbContext.Clients.FirstOrDefault(client => client.Id == clientId);
+        if (entity is null)
+            throw new NotFoundException("Client not found");
 
-        dbContext.Clients.Add(entity);
+        entity.Name = request.Name;
+        entity.Email = request.Email;
 
+        dbContext.Clients.Update(entity);
         dbContext.SaveChanges();
-
-        return new ResponseShortClientJson
-        {
-            Id = entity.Id,
-            Name = request.Name,
-        };
     }
 
     private void Validate(RequestClientJson request)
